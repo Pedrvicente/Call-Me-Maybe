@@ -4,12 +4,16 @@ from .models import FunctionDefinition, PromptRequest, OutputRequest
 import json
 from typing import Any
 
-def select_function(prompt: PromptRequest, function: list[FunctionDefinition], model: Small_LLM_Model) -> FunctionDefinition:
+def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
     vocab_path = model.get_path_to_vocab_file()
-    function_names = [f'{f.name}"'for f in function]
     with open(vocab_path, 'r') as f:
         vocab = json.load(f)
     id_to_token = {v: k for k, v in vocab.items()}
+    return id_to_token
+
+def select_function(prompt: PromptRequest, function: list[FunctionDefinition], model: Small_LLM_Model) -> FunctionDefinition:
+    id_to_token = get_vocab(model)
+    function_names = [f'{f.name}"'for f in function]
     written_function = ""
     result = build_prompt(prompt, function)
     while True:
@@ -43,21 +47,40 @@ def extract_numbers(prompt: str) -> list[float]:
             pass
     return lst_floats
 
+def extract_str(prompt: str, param_name: str, model: Small_LLM_Model) -> str:
+    new_prompt = f'Extract the name from: "{prompt}"\nname = "'
+    id_to_token = get_vocab(model)
+    result = ""
+    while True:
+        tokens = model.encode(new_prompt)[0].tolist()
+        logits = model.get_logits_from_input_ids(tokens)
+        for token_id in range(len(logits)):
+            if token_id in id_to_token:
+                chars = id_to_token[token_id]
+                if '"' in chars:
+                    logits[token_id] = float('-inf')
+        next_token = max(logits)
+        next_token_id = logits.index(next_token)
+        if next_token_id not in id_to_token:
+            break
+        new_char = id_to_token[next_token_id]
+        result += new_char
+        new_prompt += new_char
+        print(f"char: '{new_char}'")
+        if '"' in new_char or ',' in new_char or '\n' in new_char:
+            return result.strip('",\n')
 
-def extract_parameters(prompt: str, function: FunctionDefinition) -> dict[str, Any]:
-    param_names = []
+
+def extract_parameters(prompt: str, function: FunctionDefinition, model: Small_LLM_Model) -> dict[str, Any]:
+    result = {}
+    numbers = extract_numbers(prompt)
     for param_name, param in function.parameters.items():
-        param_names.append(param_name)
         param_type = param.type
         if param_type == 'number':
-            values = extract_numbers(prompt)
-    result = dict(zip(param_names, values))
+            result[param_name] = numbers.pop(0)
+        if param_type == 'string':
+            result[param_name] = extract_str(prompt, param_name, model)
     return result
-
-if __name__ == '__main__':
-    func = FunctionDefinition(name='fn_add_numbers', description='Add two numbers together and return their sum.', parameters={'a': Parameter(type='number'), 'b': Parameter(type='number')}, returns=Parameter(type='number'))
-    promp = "What is the sum of 2 and 3?"
-    extract_parameters(promp, func)
 
 
 

@@ -1,12 +1,15 @@
 [
   {
     "name": "fn_add_numbers",
-    "description": "Add two numbers together and return their sum.",
+    "description": "Add three numbers together and return their sum.",
     "parameters": {
       "a": {
         "type": "number"
       },
       "b": {
+        "type": "number"
+      },
+      "c": {
         "type": "number"
       }
     },

@@ -5,7 +5,7 @@ import json
 import argparse
 from llm_sdk import Small_LLM_Model
 from src.prompt import build_prompt
-from .generator import select_function
+from .generator import select_function, extract_parameters
 from .io import load_functions, load_prompts, save_outputs
 from .models import OutputRequest
 
@@ -32,6 +32,7 @@ def main() -> None:
     for item in prompts:
         prompt = item.prompt
         function_name = select_function(prompt, functions, model)
+        extract_parameters(prompt, function_name, model)
         output = OutputRequest(prompt=prompt, name=function_name, parameters={})
         result.append(output)
     save_outputs(args.output, result)
