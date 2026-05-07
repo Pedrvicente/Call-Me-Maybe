@@ -5,6 +5,7 @@ import json
 import argparse
 from llm_sdk import Small_LLM_Model
 from src.prompt import build_prompt
+from .generator import select_function
 
 def main() -> None:
     model: Small_LLM_Model = Small_LLM_Model()
@@ -30,13 +31,7 @@ def main() -> None:
         output = json.dump(data, f)
     for item in data:
         prompt = item['prompt']
-        result = build_prompt(prompt, functions)
-        tokens = model.encode(result)
-        values = tokens[0].tolist()
-        logits = model.get_logits_from_input_ids(values)
-        next_token = max(logits)
-        index_next_token = logits.index(next_token)
-        print(index_next_token)
+        function_name = select_function(prompt, functions, model)
 
 if __name__ == '__main__':
     main()
