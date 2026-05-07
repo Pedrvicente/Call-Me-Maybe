@@ -6,6 +6,8 @@ import argparse
 from llm_sdk import Small_LLM_Model
 from src.prompt import build_prompt
 from .generator import select_function
+from .io import load_functions, load_prompts, save_outputs
+from .models import OutputRequest
 
 def main() -> None:
     model: Small_LLM_Model = Small_LLM_Model()
@@ -18,20 +20,20 @@ def main() -> None:
 
     if args.input is None:
         args.input = 'data/input/function_calling_tests.json'
-    with open(args.input, 'r') as f:
-        data = json.load(f)
+    prompts = load_prompts(args.input)
     if args.functions_definition is None:
         args.functions_definition = 'data/input/functions_definition.json'
-    with open(args.functions_definition, 'r') as f:
-        functions = json.load(f)
+    functions = load_functions(args.functions_definition)
     if args.output is None:
         os.makedirs('data/output', exist_ok=True)
         args.output = 'data/output/function_calling_results.json'
-    with open(args.output, 'w') as f:
-        output = json.dump(data, f)
-    for item in data:
-        prompt = item['prompt']
+    result: OutputRequest = []
+    for item in prompts:
+        prompt = item.prompt
         function_name = select_function(prompt, functions, model)
+        output = OutputRequest(prompt=prompt, name=function_name, parameters={})
+        result.append(output)
+    save_outputs(args.output, result)
 
 if __name__ == '__main__':
     main()
