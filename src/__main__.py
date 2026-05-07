@@ -21,6 +21,7 @@ def main() -> None:
     if args.input is None:
         args.input = 'data/input/function_calling_tests.json'
     prompts = load_prompts(args.input)
+    print(prompts)
     if args.functions_definition is None:
         args.functions_definition = 'data/input/functions_definition.json'
     functions = load_functions(args.functions_definition)

@@ -37,7 +37,7 @@ def save_outputs(path: str, outputs: list[OutputRequest]) -> None:
     new_list = [i.model_dump() for i in outputs]
     try:
         with open(path, 'w') as f:
-            json.dump(new_list, f)
+            json.dump(new_list, f, indent=2)
     except FileNotFoundError as e:
         print(e)
     except PermissionError as e:

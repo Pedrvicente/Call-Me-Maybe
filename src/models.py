@@ -16,4 +16,4 @@ class FunctionDefinition(BaseModel):
     name: str
     description: str
     parameters: dict[str, Parameter]
-    returns: dict[str, Parameter]
+    returns: Parameter
