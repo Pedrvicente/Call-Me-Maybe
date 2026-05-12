@@ -11,7 +11,7 @@ def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
         vocab = json.load(f)
     return {token_id: model.decode([token_id]) for token_id in vocab.values()} # formato id -> text
 
-def select_function(prompt: PromptRequest, function: list[FunctionDefinition], model: Small_LLM_Model) -> str:
+def select_function(prompt: str, function: list[FunctionDefinition], model: Small_LLM_Model) -> str:
     id_to_token = get_vocab(model)
     function_names = [f'{f.name}"'for f in function]
     written_function = ""
