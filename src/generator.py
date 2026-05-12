@@ -37,16 +37,44 @@ def select_function(prompt: PromptRequest, function: list[FunctionDefinition], m
             return written_function[:-1]
     return ""
 
-def extract_numbers(prompt: str) -> list[float]:
-    lst_floats = []
-    for word in prompt.split():
-        try:
-            word = word.strip('.,!?;:')
-            digit = float(word)
-            lst_floats.append(digit)
-        except ValueError:
-            pass
-    return lst_floats
+def extract_number(prompt: str, param_name: str, description: str, extracted: dict[str, Any], model: Small_LLM_Model) -> float:
+    context = ""
+    if extracted:
+        pairs = ', '.join(f"{k}={v}" for k, v in extracted.items())
+        context = f"Already extracted: {pairs}. Do not repeate these values"
+    new_prompt = f'Extract the literal value of {param_name} from the input. Do not compute. Context: {context}. Extract the {param_name} from: <input>{prompt}</input> Context: {description}\n{param_name} = '
+    id_to_token = get_vocab(model)
+    result = ""
+    for _ in range(80):
+        tokens = model.encode(new_prompt)[0].tolist()
+        logits = model.get_logits_from_input_ids(tokens)
+        original_logits = list(logits)
+        original_token = max(logits)
+        original_token_id = logits.index(original_token)
+        original_char = id_to_token[original_token_id]
+        if any(c not in '0123456789.' for c in original_char):
+            break
+        for token_id in range(len(logits)):
+            if token_id in id_to_token:
+                chars = id_to_token[token_id]
+                if any(c not in '0123456789.' for c in chars):
+                    logits[token_id] = float('-inf')
+                    continue
+                if (result + chars) not in prompt:
+                    logits[token_id] = float('-inf')
+        next_token = max(logits)
+        next_token_id = logits.index(next_token)
+        if next_token_id not in id_to_token:
+            break
+        new_char = id_to_token[next_token_id]
+        result += new_char
+        new_prompt += new_char
+        print(f"char: '{new_char}'")
+    try:
+        return float(result)
+    except Exception as e:
+        print(e)
+        return 0.0
 
 def extract_str(prompt: str, param_name: str, description: str, model: Small_LLM_Model) -> str:
     new_prompt = f'Extract the {param_name} from: <input>{prompt}</input> Context: {description}\n{param_name} = "'
@@ -76,21 +104,11 @@ def extract_str(prompt: str, param_name: str, description: str, model: Small_LLM
 
 def extract_parameters(prompt: str, function: FunctionDefinition, model: Small_LLM_Model) -> dict[str, Any]:
     result = {}
-    numbers = extract_numbers(prompt)
     param_description = function.description
-    print(f"prompt: {prompt}, numbers: {numbers}, description: {param_description}")
     for param_name, param in function.parameters.items():
         param_type = param.type
-        print(f"param_name: {param_name}, param_type: {param_type}, numbers restantes: {numbers}")
         if param_type == 'number':
-            result[param_name] = numbers.pop(0)
-        if param_type == 'string':
+            result[param_name] = extract_number(prompt, param_name, param_description, result, model)
+        elif param_type == 'string':
             result[param_name] = extract_str(prompt, param_name, param_description, model)
     return result
-
-
-
-        
-
-
-
