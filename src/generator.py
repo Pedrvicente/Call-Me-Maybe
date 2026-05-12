@@ -7,9 +7,9 @@ from typing import Any
 def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
     vocab_path = model.get_path_to_vocab_file()
     with open(vocab_path, 'r') as f:
+        # formato token -> id
         vocab = json.load(f)
-    id_to_token = {v: k for k, v in vocab.items()}
-    return id_to_token
+    return {token_id: model.decode([token_id]) for token_id in vocab.values()} # formato id -> text
 
 def select_function(prompt: PromptRequest, function: list[FunctionDefinition], model: Small_LLM_Model) -> FunctionDefinition:
     id_to_token = get_vocab(model)
@@ -47,17 +47,17 @@ def extract_numbers(prompt: str) -> list[float]:
             pass
     return lst_floats
 
-def extract_str(prompt: str, param_name: str, model: Small_LLM_Model) -> str:
-    new_prompt = f'Extract the name from: "{prompt}"\nname = "'
+def extract_str(prompt: str, param_name: str, description: str, model: Small_LLM_Model) -> str:
+    new_prompt = f'Extract the {param_name} from: <input>{prompt}</input> Context: {description}\n{param_name} = "'
     id_to_token = get_vocab(model)
     result = ""
-    while True:
+    for _ in range(80):
         tokens = model.encode(new_prompt)[0].tolist()
         logits = model.get_logits_from_input_ids(tokens)
         for token_id in range(len(logits)):
             if token_id in id_to_token:
                 chars = id_to_token[token_id]
-                if '"' in chars:
+                if '"' in chars and not chars.endswith('"'):
                     logits[token_id] = float('-inf')
         next_token = max(logits)
         next_token_id = logits.index(next_token)
@@ -67,19 +67,24 @@ def extract_str(prompt: str, param_name: str, model: Small_LLM_Model) -> str:
         result += new_char
         new_prompt += new_char
         print(f"char: '{new_char}'")
-        if '"' in new_char or ',' in new_char or '\n' in new_char:
+        if '"' in new_char:
+            print(repr(result))
             return result.strip('",\n')
+    return result.strip('",\n')
 
 
 def extract_parameters(prompt: str, function: FunctionDefinition, model: Small_LLM_Model) -> dict[str, Any]:
     result = {}
     numbers = extract_numbers(prompt)
+    param_description = function.description
+    print(f"prompt: {prompt}, numbers: {numbers}, description: {param_description}")
     for param_name, param in function.parameters.items():
         param_type = param.type
+        print(f"param_name: {param_name}, param_type: {param_type}, numbers restantes: {numbers}")
         if param_type == 'number':
             result[param_name] = numbers.pop(0)
         if param_type == 'string':
-            result[param_name] = extract_str(prompt, param_name, model)
+            result[param_name] = extract_str(prompt, param_name, param_description, model)
     return result
 
 

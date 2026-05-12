@@ -21,7 +21,6 @@ def main() -> None:
     if args.input is None:
         args.input = 'data/input/function_calling_tests.json'
     prompts = load_prompts(args.input)
-    print(prompts)
     if args.functions_definition is None:
         args.functions_definition = 'data/input/functions_definition.json'
     functions = load_functions(args.functions_definition)
@@ -32,8 +31,9 @@ def main() -> None:
     for item in prompts:
         prompt = item.prompt
         function_name = select_function(prompt, functions, model)
-        extract_parameters(prompt, function_name, model)
-        output = OutputRequest(prompt=prompt, name=function_name, parameters={})
+        fn_def = next(f for f in functions if f.name == function_name)
+        params = extract_parameters(prompt, fn_def, model)
+        output = OutputRequest(prompt=prompt, name=function_name, parameters=params)
         result.append(output)
     save_outputs(args.output, result)
 
