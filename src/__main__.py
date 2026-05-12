@@ -27,11 +27,13 @@ def main() -> None:
     if args.output is None:
         os.makedirs('data/output', exist_ok=True)
         args.output = 'data/output/function_calling_results.json'
-    result: OutputRequest = []
+    result: list[OutputRequest] = []
     for item in prompts:
         prompt = item.prompt
         function_name = select_function(prompt, functions, model)
-        fn_def = next(f for f in functions if f.name == function_name)
+        fn_def = next((f for f in functions if f.name == function_name), None)
+        if fn_def is None:
+            continue
         params = extract_parameters(prompt, fn_def, model)
         output = OutputRequest(prompt=prompt, name=function_name, parameters=params)
         result.append(output)
