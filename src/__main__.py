@@ -7,6 +7,12 @@ from .models import OutputRequest
 
 
 def main() -> None:
+    """Run the function-calling pipeline from the command line.
+
+    Parses --input, --output, and --functions_definition arguments, loads prompts
+    and function definitions, runs constrained decoding to select a function and
+    extract its parameters for each prompt, then writes results to the output file.
+    """
     model: Small_LLM_Model = Small_LLM_Model()
 
     parser = argparse.ArgumentParser(description='Arguments to specify the files')
@@ -27,6 +33,7 @@ def main() -> None:
     result: list[OutputRequest] = []
     for item in prompts:
         prompt = item.prompt
+        print(f"Processing: {prompt}")
         function_name = select_function(prompt, functions, model)
         fn_def = next((f for f in functions if f.name == function_name), None)
         if fn_def is None:

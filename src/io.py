@@ -5,6 +5,17 @@ from pydantic import ValidationError
 
 
 def load_functions(path: str) -> list[FunctionDefinition]:
+    """Load and validate function definitions from a JSON file.
+
+    Args:
+        path: Path to the JSON file containing an array of function definitions.
+
+    Returns:
+        A list of validated FunctionDefinition instances.
+
+    Raises:
+        SystemExit: If the file is not found, contains invalid JSON, or fails schema validation.
+    """
     function_list: list[FunctionDefinition] = []
     try:
         with open(path, 'r') as f:
@@ -24,6 +35,17 @@ def load_functions(path: str) -> list[FunctionDefinition]:
 
 
 def load_prompts(path: str) -> list[PromptRequest]:
+    """Load and validate prompt requests from a JSON file.
+
+    Args:
+        path: Path to the JSON file containing an array of prompt objects.
+
+    Returns:
+        A list of validated PromptRequest instances.
+
+    Raises:
+        SystemExit: If the file is not found, contains invalid JSON, or fails schema validation.
+    """
     prompts_list: list[PromptRequest] = []
     try:
         with open(path, 'r') as f:
@@ -43,6 +65,15 @@ def load_prompts(path: str) -> list[PromptRequest]:
 
 
 def save_outputs(path: str, outputs: list[OutputRequest]) -> None:
+    """Serialize and write output requests to a JSON file.
+
+    Args:
+        path: Destination file path for the JSON output.
+        outputs: List of OutputRequest instances to serialize.
+
+    Raises:
+        SystemExit: If the file path is not found or write permission is denied.
+    """
     new_list = [i.model_dump() for i in outputs]
     try:
         with open(path, 'w') as f:
