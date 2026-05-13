@@ -1,6 +1,6 @@
 from .prompt import build_prompt
 from llm_sdk import Small_LLM_Model
-from .models import FunctionDefinition, PromptRequest, OutputRequest
+from .models import FunctionDefinition
 import json
 from typing import Any
 
@@ -16,7 +16,7 @@ def select_function(prompt: str, function: list[FunctionDefinition], model: Smal
     function_names = [f'{f.name}"'for f in function]
     written_function = ""
     result = build_prompt(prompt, function)
-    while True:
+    for _ in range(20):
         tokens = model.encode(result)
         values = tokens[0].tolist()
         logits = model.get_logits_from_input_ids(values)
@@ -48,7 +48,6 @@ def extract_number(prompt: str, param_name: str, description: str, extracted: di
     for _ in range(80):
         tokens = model.encode(new_prompt)[0].tolist()
         logits = model.get_logits_from_input_ids(tokens)
-        original_logits = list(logits)
         original_token = max(logits)
         original_token_id = logits.index(original_token)
         original_char = id_to_token[original_token_id]

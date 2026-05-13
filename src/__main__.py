@@ -1,10 +1,6 @@
-import sys
-sys.path.insert(0, 'llm_sdk')
 import os
-import json
 import argparse
 from llm_sdk import Small_LLM_Model
-from src.prompt import build_prompt
 from .generator import select_function, extract_parameters
 from .io import load_functions, load_prompts, save_outputs
 from .models import OutputRequest
