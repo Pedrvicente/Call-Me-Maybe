@@ -5,6 +5,7 @@ from .generator import select_function, extract_parameters
 from .io import load_functions, load_prompts, save_outputs
 from .models import OutputRequest
 
+
 def main() -> None:
     model: Small_LLM_Model = Small_LLM_Model()
 
@@ -34,6 +35,7 @@ def main() -> None:
         output = OutputRequest(prompt=prompt, name=function_name, parameters=params)
         result.append(output)
     save_outputs(args.output, result)
+
 
 if __name__ == '__main__':
     main()

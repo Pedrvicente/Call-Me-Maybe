@@ -4,10 +4,10 @@ install:
 	uv sync
 
 run:
-	uv run python -m src
+	PYTHONPATH=./llm_sdk uv run python -m src
 
 debug:
-	uv run python -m pdb -m src
+	PYTHONPATH=./llm_sdk uv run python -m pdb -m src
 
 clean:
 	rm -rf __pycache__ .mypy_cache .pytest_cache
