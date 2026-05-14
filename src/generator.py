@@ -4,7 +4,7 @@ from .models import FunctionDefinition
 from .visualizer import log_step, log_int_step
 import json
 from typing import Any
-import re
+
 
 def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
     """Build a token-id-to-decoded-text mapping from the model's vocabulary file.
