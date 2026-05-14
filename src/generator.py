@@ -24,7 +24,7 @@ def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
 
 def select_function(
     prompt: str,
-    function: list[FunctionDefinition],
+    functions: list[FunctionDefinition],
     id_to_token: dict[int, str],
     model: Small_LLM_Model,
     verbose: bool = False
@@ -42,10 +42,10 @@ def select_function(
     Returns:
         The selected function name, or an empty string if none could be determined.
     """
-    function_names = [f'{f.name}"' for f in function]
+    function_names = [f'{f.name}"' for f in functions]
     written_function = ""
-    result = build_prompt(prompt, function)
-    for _ in range(20):
+    result = build_prompt(prompt, functions)
+    for step in range(20):
         tokens = model.encode(result)
         values = tokens[0].tolist()
         logits = model.get_logits_from_input_ids(values)
@@ -66,7 +66,7 @@ def select_function(
         result += char
         written_function += char
         if verbose:
-            log_step(original_logits, logits, id_to_token, valid_indexes, _, written_function)
+            log_step(original_logits, logits, id_to_token, valid_indexes, step, written_function)
         if written_function.endswith('"'):
             return written_function[:-1]
     return ""
@@ -107,14 +107,16 @@ def extract_number(
         f'Context: {description}\n{param_name} = '
     )
     result = ""
-    valid_after_digit_check: list[int] = []
-    valid_after_substring_check: list[int] = []
-    for _ in range(80):
+    for step in range(80):
+        valid_after_digit_check: list[int] = []
+        valid_after_substring_check: list[int] = []
         tokens = model.encode(new_prompt)[0].tolist()
         logits = model.get_logits_from_input_ids(tokens)
         original_logits = list(logits)
         original_token = max(logits)
         original_token_id = logits.index(original_token)
+        if original_token_id not in id_to_token:
+            break
         original_char = id_to_token[original_token_id]
         if any(c not in '0123456789.' for c in original_char):
             break
@@ -127,7 +129,8 @@ def extract_number(
                 valid_after_digit_check.append(token_id)
                 if (result + chars) not in prompt:
                     logits[token_id] = float('-inf')
-                valid_after_substring_check.append(token_id)
+                else:
+                    valid_after_substring_check.append(token_id)
         next_token = max(logits)
         next_token_id = logits.index(next_token)
         if next_token_id not in id_to_token:
@@ -140,7 +143,7 @@ def extract_number(
                          id_to_token,
                          valid_after_digit_check,
                          valid_after_substring_check,
-                         _,
+                         step,
                          result)
         new_prompt += new_char
     try:
@@ -149,8 +152,8 @@ def extract_number(
         if param_type == 'number':
             return float(result)
         return 0.0
-    except Exception as e:
-        print(e)
+    except (ValueError, TypeError) as e:
+        print(f"Warning: could not convert '{result}' to {param_type}: {e}")
         return 0.0
 
 
@@ -247,6 +250,4 @@ def extract_parameters(
         elif param_type == 'string':
             result[param_name] = extract_str(
                 prompt, param_name, param_description, result, id_to_token, model)
-        else:
-            return "Unknown parameter"
     return result
