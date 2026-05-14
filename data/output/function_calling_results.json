@@ -1,16 +1,19 @@
 [
   {
-    "prompt": "What is apple?",
-    "name": "fn_read_file",
+    "prompt": "What is the product of 3 and 5?",
+    "name": "fn_multiply_numbers",
     "parameters": {
-      "path": "C:/Users/John/Downloads/Python/Python3.9.12/Python/Python3.9.12/lib/python3.9.12/site-packages",
-      "encoding": "utf-8"
+      "a": 3.0,
+      "b": 5.0
     }
   },
   {
     "prompt": "What is the product of 12 and 4?",
     "name": "fn_multiply_numbers",
-    "parameters": {}
+    "parameters": {
+      "a": 12.0,
+      "b": 4.0
+    }
   },
   {
     "prompt": "Is 4 an even number?",
@@ -76,9 +79,10 @@
   },
   {
     "prompt": "Format template: Say \"hello\" to {name}",
-    "name": "fn_format_template",
+    "name": "fn_read_file",
     "parameters": {
-      "template": "Hello, {name}!"
+      "path": "C:/Users/username/Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My",
+      "encoding": "utf-8"
     }
   }
 ]
