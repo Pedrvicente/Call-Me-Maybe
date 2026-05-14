@@ -30,6 +30,7 @@ Thumbs.db
 
 # Project-specific
 data/output/
+moulinette
 
 # uv tooling (opcional — depende se queres reprodutibilidade exacta)
 .python-version
