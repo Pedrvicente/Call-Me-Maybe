@@ -1,11 +1,11 @@
 from pydantic import Field, BaseModel, ConfigDict
-from typing import Any
+from typing import Any, Literal
 
 
 class Parameter(BaseModel):
     """Represent a typed parameter or return value in a function definition."""
     model_config = ConfigDict(extra='forbid')
-    type: str
+    type: Literal["string", "integer", "number", "boolean"]
 
 
 class PromptRequest(BaseModel):

@@ -247,4 +247,6 @@ def extract_parameters(
         elif param_type == 'string':
             result[param_name] = extract_str(
                 prompt, param_name, param_description, result, id_to_token, model)
+        else:
+            return "Unknown parameter"
     return result
