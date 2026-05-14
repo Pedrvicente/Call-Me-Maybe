@@ -4,7 +4,7 @@ from .models import FunctionDefinition
 from .visualizer import log_step, log_int_step
 import json
 from typing import Any
-
+import re
 
 def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
     """Build a token-id-to-decoded-text mapping from the model's vocabulary file.
@@ -158,6 +158,7 @@ def extract_number(
 
 
 def extract_str(
+    function_name: str,
     prompt: str,
     param_name: str,
     description: str,
@@ -165,41 +166,33 @@ def extract_str(
     id_to_token: dict[int, str],
     model: Small_LLM_Model
 ) -> str:
-    """Extract a string parameter value from a prompt using constrained decoding.
-
-    Generation stops when a closing double-quote token is produced. Tokens that
-    contain an embedded quote (but don't end with one) are masked to prevent
-    unterminated strings.
-
-    Args:
-        prompt: The user request.
-        param_name: The name of the parameter to extract.
-        description: Human-readable description providing extraction context.
-        extracted: Parameters already extracted in this call (used to avoid repetition).
-        model: The language model used for token scoring.
-
-    Returns:
-        The extracted string with surrounding quotes and whitespace stripped.
-    """
     context = ""
     if extracted:
         pairs = ', '.join(f"{k}={v}" for k, v in extracted.items())
         context = f"Already extracted: {pairs}. Do not repeat these values"
     new_prompt = (
-        f'Extract the {param_name} from: <input>{prompt}</input> '
-        f'Context: {description} {context}\n{param_name} = "'
-    )
+            f'Function: {function_name}\n'
+            f'Function purpose: {description}\n'
+            f'Input: {prompt}\n'
+            f'Already extracted parameters: {context if context else "none"}\n'
+            f'Now extracting parameter "{param_name}". '
+            f'Its value should be a substring of the input that has not been extracted yet.\n'
+            f'{param_name} = "'
+            )
     result = ""
-    for _ in range(80):
+    for step in range(80):
         tokens = model.encode(new_prompt)[0].tolist()
         logits = model.get_logits_from_input_ids(tokens)
         for token_id in range(len(logits)):
-            if token_id in id_to_token:
-                chars = id_to_token[token_id]
-                if '"' in chars and not chars.endswith('"'):
-                    logits[token_id] = float('-inf')
-                if any(c in '<>' for c in chars):
-                    logits[token_id] = float('-inf')
+            if token_id not in id_to_token:
+                continue
+            chars = id_to_token[token_id]
+            # bloquear aspas a meio (mantém o terminador estável)
+            if '"' in chars and not chars.endswith('"'):
+                logits[token_id] = float('-inf')
+            # bloquear < e > (impede regurgitação de </input>)
+            if any(c in '<>' for c in chars):
+                logits[token_id] = float('-inf')
         next_token = max(logits)
         next_token_id = logits.index(next_token)
         if next_token_id not in id_to_token:
@@ -207,9 +200,9 @@ def extract_str(
         new_char = id_to_token[next_token_id]
         result += new_char
         new_prompt += new_char
-        if '"' in new_char:
-            return result.strip('",\n')
-    return result.strip('",\n')
+        if new_char.endswith('"'):
+            return result.rstrip('"')
+    return result
 
 
 def extract_parameters(
@@ -249,5 +242,5 @@ def extract_parameters(
             )
         elif param_type == 'string':
             result[param_name] = extract_str(
-                prompt, param_name, param_description, result, id_to_token, model)
+                function.name, prompt, param_name, param_description, result, id_to_token, model)
     return result

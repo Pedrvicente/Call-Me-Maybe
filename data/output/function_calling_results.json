@@ -51,14 +51,14 @@
     "name": "fn_execute_sql_query",
     "parameters": {
       "query": "INSERT INTO logs VALUES (1, 2, 3)",
-      "database": "logs"
+      "database": "system"
     }
   },
   {
     "prompt": "Read the file at /home/user/data.json with utf-8 encoding",
     "name": "fn_read_file",
     "parameters": {
-      "path": "data.json",
+      "path": "home/user/data.json",
       "encoding": "utf-8"
     }
   },
@@ -74,14 +74,14 @@
     "prompt": "Format template: Hello {user}'s profile!",
     "name": "fn_format_template",
     "parameters": {
-      "template": "Hello {user}'s profile! {user}'s name is {name} and {user}'s age is {age} years old. {user}'s favorite color is {color}."
+      "template": "Hello {user}'s profile!"
     }
   },
   {
     "prompt": "Format template: Say \"hello\" to {name}",
     "name": "fn_read_file",
     "parameters": {
-      "path": "C:/Users/username/Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My Documents/My",
+      "path": "C:/Users/username/Documents/MyFile.txt",
       "encoding": "utf-8"
     }
   }
