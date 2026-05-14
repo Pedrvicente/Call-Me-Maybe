@@ -6,6 +6,9 @@ install:
 run:
 	PYTHONPATH=./llm_sdk uv run python -m src
 
+visualize:
+	PYTHONPATH=./llm_sdk uv run python -m src --verbose
+
 debug:
 	PYTHONPATH=./llm_sdk uv run python -m pdb -m src
 

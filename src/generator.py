@@ -1,6 +1,7 @@
 from .prompt import build_prompt
 from llm_sdk import Small_LLM_Model
 from .models import FunctionDefinition
+from .visualizer import log_step
 import json
 from typing import Any
 
@@ -22,7 +23,11 @@ def get_vocab(model: Small_LLM_Model) -> dict[int, str]:
 
 
 def select_function(
-    prompt: str, function: list[FunctionDefinition], model: Small_LLM_Model
+    prompt: str,
+    function: list[FunctionDefinition],
+    id_to_token: dict[int, str],
+    model: Small_LLM_Model,
+    verbose: bool = False
 ) -> str:
     """Select the best matching function name for a prompt using constrained decoding.
 
@@ -37,7 +42,6 @@ def select_function(
     Returns:
         The selected function name, or an empty string if none could be determined.
     """
-    id_to_token = get_vocab(model)
     function_names = [f'{f.name}"' for f in function]
     written_function = ""
     result = build_prompt(prompt, function)
@@ -45,11 +49,14 @@ def select_function(
         tokens = model.encode(result)
         values = tokens[0].tolist()
         logits = model.get_logits_from_input_ids(values)
+        valid_indexes = []
         for token_id in range(len(logits)):
             if token_id in id_to_token:
                 chars = id_to_token[token_id]
                 if not any(name.startswith(written_function + chars) for name in function_names):
                     logits[token_id] = float('-inf')
+                else:
+                    valid_indexes.append(token_id)
         next_token = max(logits)
         next_token_id = logits.index(next_token)
         if next_token_id not in id_to_token:
@@ -57,14 +64,22 @@ def select_function(
         char = id_to_token[next_token_id]
         result += char
         written_function += char
+        if verbose:
+            log_step(logits, id_to_token, valid_indexes, _, written_function)
         if written_function.endswith('"'):
             return written_function[:-1]
     return ""
 
 
 def extract_number(
-    prompt: str, param_name: str, description: str,
-    extracted: dict[str, Any], model: Small_LLM_Model
+    prompt: str,
+    param_type: str,
+    param_name: str,
+    description: str,
+    extracted: dict[str, Any],
+    id_to_token: dict[int, str],
+    model: Small_LLM_Model,
+    verbose: bool = False
 ) -> float:
     """Extract a numeric parameter value from a prompt using constrained decoding.
 
@@ -90,8 +105,8 @@ def extract_number(
         f'Context: {context}. Extract the {param_name} from: <input>{prompt}</input> '
         f'Context: {description}\n{param_name} = '
     )
-    id_to_token = get_vocab(model)
     result = ""
+    valid_indexes = []
     for _ in range(80):
         tokens = model.encode(new_prompt)[0].tolist()
         logits = model.get_logits_from_input_ids(tokens)
@@ -108,23 +123,35 @@ def extract_number(
                     continue
                 if (result + chars) not in prompt:
                     logits[token_id] = float('-inf')
+                else:
+                    valid_indexes.append(token_id)
         next_token = max(logits)
         next_token_id = logits.index(next_token)
         if next_token_id not in id_to_token:
             break
         new_char = id_to_token[next_token_id]
         result += new_char
+        if verbose:
+            log_step(logits, id_to_token, valid_indexes, _, result)
         new_prompt += new_char
     try:
-        return float(result)
+        if param_type == 'integer':
+            return int(result)
+        if param_type == 'number':
+            return float(result)
+        return 0.0
     except Exception as e:
         print(e)
         return 0.0
 
 
 def extract_str(
-    prompt: str, param_name: str, description: str,
-    extracted: dict[str, Any], model: Small_LLM_Model
+    prompt: str,
+    param_name: str,
+    description: str,
+    extracted: dict[str, Any],
+    id_to_token: dict[int, str],
+    model: Small_LLM_Model
 ) -> str:
     """Extract a string parameter value from a prompt using constrained decoding.
 
@@ -150,7 +177,6 @@ def extract_str(
         f'Extract the {param_name} from: <input>{prompt}</input> '
         f'Context: {description} {context}\n{param_name} = "'
     )
-    id_to_token = get_vocab(model)
     result = ""
     for _ in range(80):
         tokens = model.encode(new_prompt)[0].tolist()
@@ -159,6 +185,8 @@ def extract_str(
             if token_id in id_to_token:
                 chars = id_to_token[token_id]
                 if '"' in chars and not chars.endswith('"'):
+                    logits[token_id] = float('-inf')
+                if any(c in '<>' for c in chars):
                     logits[token_id] = float('-inf')
         next_token = max(logits)
         next_token_id = logits.index(next_token)
@@ -173,7 +201,10 @@ def extract_str(
 
 
 def extract_parameters(
-    prompt: str, function: FunctionDefinition, model: Small_LLM_Model
+    prompt: str,
+    function: FunctionDefinition,
+    id_to_token: dict[int, str],
+    model: Small_LLM_Model
 ) -> dict[str, Any]:
     """Extract all parameters defined by a function from a natural-language prompt.
 
@@ -192,10 +223,11 @@ def extract_parameters(
     param_description = function.description
     for param_name, param in function.parameters.items():
         param_type = param.type
-        if param_type == 'number':
+        if param_type == 'number' or param_type == 'integer':
             result[param_name] = extract_number(
-                prompt, param_name, param_description, result, model
+                prompt, param_type, param_name, param_description, result, id_to_token, model
             )
         elif param_type == 'string':
-            result[param_name] = extract_str(prompt, param_name, param_description, result, model)
+            result[param_name] = extract_str(
+                prompt, param_name, param_description, result, id_to_token, model)
     return result
