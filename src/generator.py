@@ -49,6 +49,7 @@ def select_function(
         tokens = model.encode(result)
         values = tokens[0].tolist()
         logits = model.get_logits_from_input_ids(values)
+        original_logits = list(logits)
         valid_indexes = []
         for token_id in range(len(logits)):
             if token_id in id_to_token:
@@ -65,7 +66,7 @@ def select_function(
         result += char
         written_function += char
         if verbose:
-            log_step(logits, id_to_token, valid_indexes, _, written_function)
+            log_step(original_logits, logits, id_to_token, valid_indexes, _, written_function)
         if written_function.endswith('"'):
             return written_function[:-1]
     return ""
@@ -132,7 +133,7 @@ def extract_number(
         new_char = id_to_token[next_token_id]
         result += new_char
         if verbose:
-            log_step(logits, id_to_token, valid_indexes, _, result)
+            log_step(logits, logits, id_to_token, valid_indexes, _, result)
         new_prompt += new_char
     try:
         if param_type == 'integer':

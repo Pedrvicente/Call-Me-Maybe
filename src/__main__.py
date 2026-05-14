@@ -35,7 +35,7 @@ def main() -> None:
     result: list[OutputRequest] = []
     for item in prompts:
         prompt = item.prompt
-        print(f"Processing: {prompt}")
+        print(f"\nProcessing: {prompt}")
         function_name = select_function(prompt, functions, id_to_token, model, verbose=args.verbose)
         fn_def = next((f for f in functions if f.name == function_name), None)
         if fn_def is None:
