@@ -9,6 +9,9 @@ run:
 visualize:
 	PYTHONPATH=./llm_sdk uv run python -m src --verbose
 
+run-large:
+	PYTHONPATH=./llm_sdk uv run python -m src --model Qwen/Qwen3-1.7B
+
 debug:
 	PYTHONPATH=./llm_sdk uv run python -m pdb -m src
 

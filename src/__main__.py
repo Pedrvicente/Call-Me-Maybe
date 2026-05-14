@@ -13,14 +13,13 @@ def main() -> None:
     and function definitions, runs constrained decoding to select a function and
     extract its parameters for each prompt, then writes results to the output file.
     """
-    model: Small_LLM_Model = Small_LLM_Model()
-    id_to_token = get_vocab(model)
 
     parser = argparse.ArgumentParser(description='Arguments to specify the files')
     parser.add_argument('-i', '--input', type=str)
     parser.add_argument('-o', '--output', type=str)
     parser.add_argument('-f', '--functions_definition', type=str)
     parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-m', '--model', default='Qwen/Qwen3-0.6B')
     args = parser.parse_args()
 
     if args.input is None:
@@ -32,6 +31,8 @@ def main() -> None:
     if args.output is None:
         os.makedirs('data/output', exist_ok=True)
         args.output = 'data/output/function_calling_results.json'
+    model: Small_LLM_Model = Small_LLM_Model(model_name=args.model)
+    id_to_token = get_vocab(model)
     result: list[OutputRequest] = []
     for item in prompts:
         prompt = item.prompt

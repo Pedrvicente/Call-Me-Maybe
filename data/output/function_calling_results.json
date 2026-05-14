@@ -1,10 +1,10 @@
 [
   {
-    "prompt": "What is the product of 3 and 5?",
+    "prompt": "What is the product of banana?",
     "name": "fn_multiply_numbers",
     "parameters": {
-      "a": 3.0,
-      "b": 5.0
+      "a": 0.0,
+      "b": 0.0
     }
   },
   {

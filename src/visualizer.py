@@ -39,7 +39,7 @@ def print_top_tokens(
         status = get_status(tid)
         score = logits_np[tid]
         print(f"Token: '{token_text}' | Score: {score:.2f} | {status}")
-        time.sleep(0.8)
+        time.sleep(0.6)
 
 
 def log_step(
@@ -71,7 +71,7 @@ def log_step(
     logits_np = np.array(masked_logits)
     best_option = int(np.argmax(logits_np))
     print(f"\nChoose: '{id_to_token.get(best_option, '???')}'")
-    time.sleep(0.8)
+    time.sleep(0.6)
     if '"' in written_function:
         print(f"\nFinished Function: {written_function}")
     else:
@@ -113,5 +113,5 @@ def log_int_step(
     logits_np = np.array(masked_logits)
     best_option = int(np.argmax(logits_np))
     print(f"\nChoose: '{id_to_token.get(best_option, '???')}'")
-    time.sleep(0.8)
+    time.sleep(0.6)
     print(f"\nWritten Number So Far: {written_number}")
