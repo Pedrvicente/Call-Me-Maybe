@@ -40,7 +40,7 @@ def main() -> None:
         fn_def = next((f for f in functions if f.name == function_name), None)
         if fn_def is None:
             continue
-        params = extract_parameters(prompt, fn_def, id_to_token, model)
+        params = extract_parameters(prompt, fn_def, id_to_token, model, verbose=args.verbose)
         output = OutputRequest(prompt=prompt, name=function_name, parameters=params)
         result.append(output)
     save_outputs(args.output, result)

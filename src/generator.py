@@ -1,7 +1,7 @@
 from .prompt import build_prompt
 from llm_sdk import Small_LLM_Model
 from .models import FunctionDefinition
-from .visualizer import log_step
+from .visualizer import log_step, log_int_step
 import json
 from typing import Any
 
@@ -107,10 +107,12 @@ def extract_number(
         f'Context: {description}\n{param_name} = '
     )
     result = ""
-    valid_indexes = []
+    valid_after_digit_check: list[int] = []
+    valid_after_substring_check: list[int] = []
     for _ in range(80):
         tokens = model.encode(new_prompt)[0].tolist()
         logits = model.get_logits_from_input_ids(tokens)
+        original_logits = list(logits)
         original_token = max(logits)
         original_token_id = logits.index(original_token)
         original_char = id_to_token[original_token_id]
@@ -122,10 +124,10 @@ def extract_number(
                 if any(c not in '0123456789.' for c in chars):
                     logits[token_id] = float('-inf')
                     continue
+                valid_after_digit_check.append(token_id)
                 if (result + chars) not in prompt:
                     logits[token_id] = float('-inf')
-                else:
-                    valid_indexes.append(token_id)
+                valid_after_substring_check.append(token_id)
         next_token = max(logits)
         next_token_id = logits.index(next_token)
         if next_token_id not in id_to_token:
@@ -133,7 +135,13 @@ def extract_number(
         new_char = id_to_token[next_token_id]
         result += new_char
         if verbose:
-            log_step(logits, logits, id_to_token, valid_indexes, _, result)
+            log_int_step(original_logits,
+                         logits,
+                         id_to_token,
+                         valid_after_digit_check,
+                         valid_after_substring_check,
+                         _,
+                         result)
         new_prompt += new_char
     try:
         if param_type == 'integer':
@@ -205,7 +213,8 @@ def extract_parameters(
     prompt: str,
     function: FunctionDefinition,
     id_to_token: dict[int, str],
-    model: Small_LLM_Model
+    model: Small_LLM_Model,
+    verbose: bool = False
 ) -> dict[str, Any]:
     """Extract all parameters defined by a function from a natural-language prompt.
 
@@ -226,7 +235,14 @@ def extract_parameters(
         param_type = param.type
         if param_type == 'number' or param_type == 'integer':
             result[param_name] = extract_number(
-                prompt, param_type, param_name, param_description, result, id_to_token, model
+                prompt,
+                param_type,
+                param_name,
+                param_description,
+                result,
+                id_to_token,
+                model,
+                verbose
             )
         elif param_type == 'string':
             result[param_name] = extract_str(
