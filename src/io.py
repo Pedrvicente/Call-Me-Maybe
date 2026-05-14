@@ -21,6 +21,7 @@ def load_functions(path: str) -> list[FunctionDefinition]:
         with open(path, 'r') as f:
             functions = json.load(f)
             for i in functions:
+                # i é cada dicionario com todas as funções
                 function_list.append(FunctionDefinition.model_validate(i))
     except FileNotFoundError:
         print(f"Error: file {path} not found")
