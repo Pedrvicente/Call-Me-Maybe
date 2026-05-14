@@ -168,11 +168,10 @@ Example output:
 
 ## Resources
 
-- [Qwen3 model on Hugging Face](https://huggingface.co/Qwen/Qwen3-0.6B)
 - [Outlines library — constrained decoding (conceptual reference)](https://github.com/outlines-dev/outlines)
-- [Andrej Karpathy — "Let's build the GPT Tokenizer"](https://www.youtube.com/watch?v=zduSFxRajkE) — the section on `bytes_to_unicode` was helpful for understanding the `Ġ` prefix and BPE byte-level mapping.
+- [Andrej Karpathy — "Let's build the GPT Tokenizer"](https://www.youtube.com/watch?v=zduSFxRajkE): This video was super helful to understand the conceps of Enconding, Decoding, and the process of Tokenization through BytePair Encoding
+- [Andrej Karpathy — "Let's build GPT: from scratch, in code, spelled out."](https://www.youtube.com/watch?v=kCc8FmEb1nY&t=1050s&pp=ygUPbGV0cyBidWlsZCBjaGF00gcJCQQLAYcqIYzv): Also super very helpful to understand a lot of concepts
 - [minBPE — Karpathy's reference BPE implementation](https://github.com/karpathy/minbpe)
 - [Pydantic documentation](https://docs.pydantic.dev/)
-- [uv package manager](https://github.com/astral-sh/uv)
 
-**AI usage.** Claude (Anthropic) was used throughout this project as a Socratic tutor — asking questions to guide understanding rather than providing direct solutions. Specifically, AI was used to explain concepts (logits, BPE tokenization, constrained decoding), to debug import errors and logic issues, to review code structure, and to discuss design trade-offs (e.g. how a system might handle out-of-scope prompts, or whether to use a function or a class for a given abstraction). All implementation decisions and code were written by the student with AI as a guide, not as a code generator.
+**AI usage.** AI was used throughout this project tutor, asking questions to guide understanding rather than providing direct solutions. Specifically, AI was used to explain concepts (logits, BPE tokenization, constrained decoding), to debug import errors and logic issues, to review code structure, and to discuss design trade-offs. All implementation decisions and code were written by me with AI as a guide, not as a code generator.
