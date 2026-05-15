@@ -169,8 +169,7 @@ def extract_str(
     """Extract a string parameter value from a prompt using constrained decoding.
 
     Generation happens inside a quoted context (`param = "`) and stops when a
-    token ending in `"` is produced. The substring constraint forces the
-    extracted value to come from the original prompt.
+    token ending in `"` is produced.
 
     Args:
         function_name: Name of the function being called (for prompt context).
