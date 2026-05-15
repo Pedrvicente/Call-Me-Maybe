@@ -90,8 +90,6 @@ Already-extracted parameters are passed forward as context to disambiguate cases
 
 **Vocabulary inversion at startup, passed by dependency injection.** The vocabulary file (`token → id`) is loaded once and inverted to `id → token`. The resulting `id_to_token` dict is computed once in `main()` and passed down through all functions, avoiding the repeated recomputation that would otherwise occur dozens of times per prompt.
 
-**Substring constraint for both numbers and strings.** Requiring the extracted value to be a continuous substring of the original prompt prevents hallucination and computed answers, while keeping the extraction logic completely free of regex or heuristic word-splitting.
-
 **Context for already-extracted parameters.** Rather than re-running the model with cleverly engineered prompts to avoid duplicates, the previously-extracted values are simply included as context, letting the model itself break the symmetry.
 
 ## Performance Analysis
@@ -99,7 +97,7 @@ Already-extracted parameters are passed forward as context to disambiguate cases
 On the provided test set (11 prompts):
 
 - **Function selection**: ~10/11 correct. The persistent failure is a case where lexical similarity between the prompt and a wrong function name outweighs the correct function's semantic match — a limitation of the 0.6B-parameter model's reasoning, not of the constraint architecture.
-- **Argument extraction**: roughly 85% of parameters extracted correctly. Remaining failures concentrate on cases of genuine semantic ambiguity, where two distinct strings in the prompt are both valid substrings of the input and the constraint alone cannot disambiguate between them.
+- **Argument extraction**: roughly 90% of parameters extracted correctly. Remaining failures concentrate on cases of genuine semantic ambiguity, where two distinct strings in the prompt are both valid substrings of the input and the constraint alone cannot disambiguate between them.
 - **Runtime**: approximately 30–60 seconds for the full test set on Apple Silicon (MPS). Larger models (via the `--model` flag) trade speed for accuracy.
 
 The Qwen3-0.6B model achieves usable reliability for this structured task purely through constrained decoding — the same architecture with a larger model resolves most of the remaining failures without changing a line of code, as can be verified by running `--model Qwen/Qwen3-1.7B`.

@@ -166,6 +166,24 @@ def extract_str(
     id_to_token: dict[int, str],
     model: Small_LLM_Model
 ) -> str:
+    """Extract a string parameter value from a prompt using constrained decoding.
+
+    Generation happens inside a quoted context (`param = "`) and stops when a
+    token ending in `"` is produced. The substring constraint forces the
+    extracted value to come from the original prompt.
+
+    Args:
+        function_name: Name of the function being called (for prompt context).
+        prompt: The user request.
+        param_name: The name of the parameter to extract.
+        description: Function description providing extraction context.
+        extracted: Parameters already extracted in this call.
+        id_to_token: Mapping from token ID to decoded text.
+        model: The language model used for token scoring.
+
+    Returns:
+        The extracted string with the closing quote stripped.
+    """
     context = ""
     if extracted:
         pairs = ', '.join(f"{k}={v}" for k, v in extracted.items())
@@ -175,8 +193,7 @@ def extract_str(
             f'Function purpose: {description}\n'
             f'Input: {prompt}\n'
             f'Already extracted parameters: {context if context else "none"}\n'
-            f'Now extracting parameter "{param_name}". '
-            f'Its value should be a substring of the input that has not been extracted yet.\n'
+            f'Now extracting parameter "{param_name}".\n'
             f'{param_name} = "'
             )
     result = ""

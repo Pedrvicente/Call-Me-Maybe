@@ -40,6 +40,7 @@ def main() -> None:
         function_name = select_function(prompt, functions, id_to_token, model, verbose=args.verbose)
         fn_def = next((f for f in functions if f.name == function_name), None)
         if fn_def is None:
+            print(f"Warning: could not match a function for prompt: {prompt}")
             continue
         params = extract_parameters(prompt, fn_def, id_to_token, model, verbose=args.verbose)
         output = OutputRequest(prompt=prompt, name=function_name, parameters=params)

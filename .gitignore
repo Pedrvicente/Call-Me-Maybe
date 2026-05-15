@@ -31,7 +31,7 @@ Thumbs.db
 # Project-specific
 data/output/
 moulinette
-data
+data-
 
 # uv tooling (opcional — depende se queres reprodutibilidade exacta)
 .python-version
